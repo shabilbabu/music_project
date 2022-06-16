@@ -1,25 +1,23 @@
-
-
 import 'package:flutter/material.dart';
-import 'package:music_project/Play_list/english_screen.dart';
+import 'package:music_project/Play_list/playlist_folder.dart';
 import 'package:music_project/Play_list/play_list_function.dart';
-
+import 'package:music_project/Screens/customs.dart';
 import 'package:music_project/db/data_model.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-
 import '../Screens/home_screen.dart';
 
 class PlaylistScreen extends StatefulWidget {
-   PlaylistScreen({Key? key}) : super(key: key);
+  PlaylistScreen({Key? key}) : super(key: key);
 
   final namecontroller = TextEditingController();
- final List<dynamic> selectionList = [];
-
+ static List<dynamic> selectionList = [];
   @override
   State<PlaylistScreen> createState() => _PlaylistScreenState();
 }
 
 class _PlaylistScreenState extends State<PlaylistScreen> {
+  bool playlistadd = false;
+
   @override
   Widget build(BuildContext context) {
     PlayFunction.displayplaylist();
@@ -29,13 +27,7 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
         child: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Text(
-              'Playlist',
-              style: TextStyle(fontFamily: 'colonnamt', fontSize: 35),
-            ),
-          ),
+          title: TitleName(name: 'Playlist'),
           actions: [
             Padding(
               padding: const EdgeInsets.only(top: 20, right: 20),
@@ -70,19 +62,23 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                                         filled: true,
                                         fillColor: Colors.white,
                                         suffixIcon: InkWell(
-                                            onTap: () {
-                                              final foldername = widget.namecontroller.text;
-                                              
-                                             final modelM =  MusicModel(name: foldername,songlistdb: widget.selectionList);
-                                              
-                                              PlayFunction.addplaylist(model: modelM);
-                                              
-                                                Navigator.pop(context);
-                                              
+                                            onTap: () async {
+                                              final foldername =
+                                                  widget.namecontroller.text;
+                                              final modelM = MusicModel(
+                                                  name: foldername,
+                                                  songlistdb:
+                                                      PlaylistScreen.selectionList);
+                                              await PlayFunction.addplaylist(
+                                                  model: modelM);
+                                              widget.namecontroller.clear();
+                                             PlaylistScreen.selectionList.clear();
+                                              Navigator.pop(context);
                                             },
                                             child: const Icon(
                                               Icons.save,
-                                              color: Colors.black,
+                                              color:
+                                                  Color.fromARGB(255, 0, 0, 0),
                                               size: 30,
                                             )),
                                         hintText: '    Create Playlist',
@@ -115,17 +111,13 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                                                   color: Colors.white),
                                             ),
                                             subtitle: Text(
-                                              HomeScreen
-                                                  .songs[index].displayName,
+                                              HomeScreen.songs[index].artist!,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(
                                                   color: Colors.white),
                                             ),
-                                            trailing:  IconButton(onPressed: (){
-                                              widget.selectionList.add(HomeScreen.songs[index].id);
-
-                                            }, icon: Icon(Icons.add_circle_outline)),
+                                            trailing: AddRemoveButton(index: index),
                                             leading: ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(500),
@@ -162,35 +154,149 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
         padding: const EdgeInsets.only(top: 20, right: 20, left: 20),
         child: ValueListenableBuilder(
           valueListenable: PlayFunction.listplaysong,
-          
           builder: (BuildContext context, dynamic value, Widget? child) {
-            return  GridView.builder(
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
-            childAspectRatio: 3 / 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-          ),
-          itemCount: PlayFunction.listplaysong.value.length,
-          itemBuilder: (BuildContext context, index) {
-            
-            return InkWell(
-              onTap: () {
-                
-                Navigator.of(context).push(MaterialPageRoute(builder: (context)=> EnglishScreen(folderindex: index)));
-                
-              },
-              child: Card(
-                color: Colors.white,
-                child: Text(PlayFunction.listplaysong.value[index].name.toString()),
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                childAspectRatio: 3 / 3,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
               ),
+              itemCount: PlayFunction.listplaysong.value.length,
+              itemBuilder: (BuildContext context, index) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            PlaylistFolder(folderindex: index)));
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: const DecorationImage(
+                        image:  AssetImage(
+                          'lib/assets/playlist.jpg',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 30,
+                          width: 100,
+                          decoration: const BoxDecoration(
+                              borderRadius:  BorderRadius.only(
+                                  bottomLeft: Radius.circular(10),
+                                  bottomRight: Radius.circular(10)),
+                              color: Colors.white),
+                          child: Center(
+                              child: Text(
+                            PlayFunction.listplaysong.value[index].name
+                                .toString(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                                fontFamily: 'colonnamt',
+                                fontSize: 20),
+                          )),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 95,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                            backgroundColor: Colors.white,
+                                            title: const Text(
+                                              'Remove this playlist ',
+                                              style: TextStyle(
+                                                  fontFamily: 'colonnamt',
+                                                  fontSize: 20),
+                                            ),
+                                            content: Container(
+                                              height: 40,
+                                              width: 300,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(30),
+                                                  color: const Color.fromARGB(
+                                                      255, 0, 0, 0)),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          color:  Color.fromARGB(
+                                                              255,
+                                                              255,
+                                                              255,
+                                                              255)),
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    height: 60,
+                                                    width: 5,
+                                                    decoration: const BoxDecoration(
+                                                        color: Colors.white),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      PlayFunction.deleteplaylist(index);
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text(
+                                                      'Ok',
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: Color.fromARGB(
+                                                              255, 206, 18, 5)),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                  },
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Color.fromARGB(255, 165, 0, 0),
+                                  ))
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
-             
-          },
-        ); 
           },
         ),
-        
       ),
     );
   }

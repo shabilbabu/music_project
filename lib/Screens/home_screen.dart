@@ -1,7 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_project/Screens/customs.dart';
 import 'package:music_project/Screens/play_screen.dart';
+
+
+import 'package:music_project/concatinating.dart';
+
+import 'package:music_project/db/favorites/favourite_function.dart';
 
 import 'package:on_audio_query/on_audio_query.dart';
 
@@ -25,27 +32,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // String currentSongTitle = '';
-  // int currentIndex = 0;
+  //int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    FavouriteData.songsshow();
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: const Center(
-          child: Padding(
-            padding: EdgeInsets.only(top: 10),
-            child: Text(
-              'My Musics',
-              style: TextStyle(
-                fontFamily: 'colonnamt',
-                fontSize: 35,
-              ),
-            ),
-          ),
-        ),
+        title: TitleName(name: 'Musics'),
       ),
       body: FutureBuilder<List<SongModel>>(
           future: _audioQuery.querySongs(
@@ -58,12 +55,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: CircularProgressIndicator(),
               );
             }
-      
+    
             if (item.data!.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
                   'No Songs',
-                  style: TextStyle(fontSize: 22, fontFamily: 'colonnamt',color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 22.sp,
+                      fontFamily: 'colonnamt',
+                      color: Colors.white),
                 ),
               );
             }
@@ -72,43 +72,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: item.data!.length,
                 itemBuilder: (context, index) {
                   return Container(
-                    padding: const EdgeInsets.only(top: 15, bottom: 15),
-                    margin: const EdgeInsets.only(top: 15, left: 15, right: 16),
+                    padding:  EdgeInsets.only(top: 15.h, bottom: 15.h),
+                    margin:  EdgeInsets.only(top: 15.h, left: 15.r, right: 16.r),
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.black.withOpacity(0.5)),
                     child: InkWell(
                       onTap: () async {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (ctx) => const PlayScreen()));
-                          await HomeScreen.player.setAudioSource(
-                              createPlaylist(item.data!),
-                              initialIndex: index);
-                          await HomeScreen.player.play();
-                        },
-                        
-                      child: ListTile(
-                        title: Text(item.data![index].title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white)),
-                        subtitle: Text(item.data![index].artist!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white)),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: QueryArtworkWidget(
-                  id: HomeScreen.songs[index].id,
-                  type: ArtworkType.AUDIO,
-                  artworkBorder: BorderRadius.circular(150.0),
-                ),),
-                        trailing: const Icon(
-                          Icons.favorite,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (ctx) =>
+                                PlayScreen(pattu: HomeScreen.songs)));
+                        await HomeScreen.player.setAudioSource(
+                            Concatinating.createPlaylist(item.data!),
+                            initialIndex: index);
+                        await HomeScreen.player.play();
+                      },
+                      child: ListTileModel(index: index, songslist: item.data),
                     ),
                   );
                 });
@@ -125,17 +104,4 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
     }
   }
-
-  ConcatenatingAudioSource createPlaylist(List<SongModel> songs) {
-    List<AudioSource> sources = [];
-    for (var song in songs) {
-      sources.add(AudioSource.uri(Uri.parse(song.uri!)));
-    }
-    return ConcatenatingAudioSource(children: sources);
-  }
-  
-
-  
-  
 }
-

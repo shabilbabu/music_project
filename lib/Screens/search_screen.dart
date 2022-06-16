@@ -85,12 +85,14 @@ class SearchScreen extends StatelessWidget {
                                           type: ArtworkType.AUDIO),
                                       title: Text(
                                         data.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(color: Colors.white),
                                       ),
                                       onTap: () async {
                                         await HomeScreen.player.play();
                                         Navigator.of(context).push(MaterialPageRoute(
-                                            builder: (context) => const PlayScreen()));
+                                            builder: (context) =>  PlayScreen(pattu: HomeScreen.songs,)));
     
                                         int songindex =
                                             indexpassing(searchdata, index);

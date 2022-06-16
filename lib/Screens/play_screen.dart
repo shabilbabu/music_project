@@ -3,11 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'package:music_project/Screens/home_screen.dart';
+import 'package:music_project/Screens/homescreen_favouritebutton.dart';
+import 'package:music_project/db/favorites/favourite_button.dart';
+import 'package:music_project/db/favorites/favourite_function.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PlayScreen extends StatefulWidget {
-  const PlayScreen({Key? key}) : super(key: key);
+  
+
+   PlayScreen({Key? key,required this.pattu}) : super(key: key);
+  List <SongModel> pattu  = [];
+
+  static List <SongModel> minilist = [];
   
 
   @override
@@ -28,6 +36,12 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   void initState() {
+    PlayScreen.minilist.clear();
+   for(int i = 0; i < widget.pattu.length; i++){
+     PlayScreen.minilist.add(widget.pattu[i]);
+   }
+    PlayScreen.minilist.addAll(widget.pattu);
+
     super.initState();
     HomeScreen.player.currentIndexStream.listen((index) {
       if (index != null) {
@@ -38,6 +52,7 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    FavouriteData.getfavouritelist();
     return Container(
       decoration: const BoxDecoration(color: Colors.white),
       child: Scaffold(
@@ -58,7 +73,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
-            Text(HomeScreen.songs[currentIndex].artist!,
+            Text(widget.pattu[currentIndex].artist!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: Colors.white),
@@ -70,10 +85,30 @@ class _PlayScreenState extends State<PlayScreen> {
                 width: 300,
                 height: 300,
                 margin: const EdgeInsets.only(top: 40, bottom: 30),
-                child: QueryArtworkWidget(
-                  id: HomeScreen.songs[currentIndex].id,
-                  type: ArtworkType.AUDIO,
-                  artworkBorder: BorderRadius.circular(150.0),
+                child: GestureDetector(
+                  onHorizontalDragEnd: (DragDownDetails) {
+                    if(DragDownDetails.primaryVelocity!<0){
+                      if(HomeScreen.player.hasNext) {
+                          HomeScreen.player.seekToNext();
+                          setState(() {
+                            
+                          });
+                        }else if(DragDownDetails.primaryVelocity! >0){
+                          if(HomeScreen.player.hasPrevious){
+                            HomeScreen.player.seekToPrevious();
+                            setState(() {
+                              
+                            });
+
+                          }
+                        }
+                    }
+                  },
+                  child: QueryArtworkWidget(
+                    id: widget.pattu[currentIndex].id,
+                    type: ArtworkType.AUDIO,
+                    artworkBorder: BorderRadius.circular(150.0),
+                  ),
                 ),
               ),
             ),
@@ -133,13 +168,7 @@ class _PlayScreenState extends State<PlayScreen> {
                           onTap: () {},
                           child: Container(
                             margin: const EdgeInsets.only(right: 40.0),
-                            child: IconButton(
-                                onPressed: () {},
-                                icon: const Icon(
-                                  Icons.favorite_border_outlined,
-                                  size: 20,
-                                  color: Colors.white,
-                                )),
+                            child: homefavorite(id: widget.pattu[currentIndex].id,) 
                           ),
                         )),
                         // repeat mode
@@ -222,6 +251,7 @@ class _PlayScreenState extends State<PlayScreen> {
                       onTap: () {
                         if (HomeScreen.player.hasPrevious) {
                           HomeScreen.player.seekToPrevious();
+                          HomeScreen.player.play();
                         }
                       },
                       child: Container(
@@ -283,6 +313,7 @@ class _PlayScreenState extends State<PlayScreen> {
                       onTap: () {
                         if (HomeScreen.player.hasNext) {
                           HomeScreen.player.seekToNext();
+                          HomeScreen.player.play();
                         }
                       },
                       child: Container(
@@ -312,7 +343,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void _updateCurrentPlayingSongDetails(int index) {
     setState(() {
       if (HomeScreen.songs.isNotEmpty) {
-        currentSongTitle = HomeScreen.songs[index].title;
+        currentSongTitle = widget.pattu[index].title;
         currentIndex = index;
       }
     });
